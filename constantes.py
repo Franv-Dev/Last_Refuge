@@ -21,5 +21,14 @@ color_white = (255,255,255)
 color_orange = (255,128,0)
 color_brown = (139,69,19)
 color_transp = (0,0,0,128)
+#barra de estados
+max_energy = 100
+max_food = 100
+max_thirst = 100
+#colores para las barras de estado
+energy_color = (255, 215, 0)  # amarillo
+food_color = (255, 165, 0)  # naranja
+thirst_color = (0, 191, 255)  # azul claro
+bar_background_color = (100, 100, 100)  # color de fondo de la barra gris oscuro
 #velocidad
 speed = 5

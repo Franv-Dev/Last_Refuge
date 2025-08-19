@@ -60,8 +60,7 @@ def main():
         player.Draw(window)
         if show_inventory:
             player.draw_inventory(window)
-        else:
-            world.draw_inventory(window,player)
+        
 
         #actualizar visualizacion de la ventana
         pygame.display.flip()

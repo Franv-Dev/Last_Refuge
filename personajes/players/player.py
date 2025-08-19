@@ -17,6 +17,10 @@ class Player:
             "wood" : self.load_item_image("wood.png"),
             "stone": self.load_item_image("small_stone.png")
         }
+        #barras de estado atributos
+        self.energy = constantes.max_energy
+        self.food = constantes.max_food
+        self.thirst = constantes.max_thirst
     
     #metodo para cargar los items que recolecta
     def load_item_image(self,filename):
@@ -39,7 +43,8 @@ class Player:
         self.y = new_y
         self.x = max(0,min(self.x,constantes.window_width - self.size))
         self.y = max(0,min(self.y,constantes.window_height - self.size))
-    
+        #cuando se mueve pierde energia
+        self.update_energy(-0.1)
 
     def check_collision(self,x,y,obj):
         return (x < obj.x + obj.size*0.75 and x + self.size*0.75 > obj.x and y < obj.y + obj.size and 
@@ -86,3 +91,24 @@ class Player:
                                     True,constantes.color_white)
         interfaz.blit(close_text, (constantes.window_width//2 - close_text.get_width()//2,
                                 constantes.window_height - 40))
+        
+        
+    def update_energy(self,amount):
+        self.energy = max(0, min(self.energy + amount, constantes.max_energy))
+
+    def update_food(self,amount):
+        self.food = max(0, min(self.food + amount, constantes.max_food))
+
+    def update_thirst(self,amount):
+        self.thirst = max(0, min(self.thirst + amount, constantes.max_thirst))
+    
+    def draw_status_bars(self,screen):
+        bar_width = 100
+        bar_height = 10
+        x_offset=10
+        y_offset=10
+        #barra energia
+        pygame.draw.rect(screen, constantes.bar_background_color,
+                                (x_offset, y_offset, bar_width, bar_height))
+        pygame.draw.rect(screen, constantes.bar_color,
+                         (x_offset, y_offset, bar_width * (self.energy / constantes.max_energy), bar_height))
