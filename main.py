@@ -74,7 +74,7 @@ def main():
 
         #dibujo de objetos y jugador
         world.Draw(window)
-        player.Draw(window)
+        player.draw(window)
         if show_inventory:
             player.draw_inventory(window)
         

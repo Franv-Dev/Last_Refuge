@@ -113,7 +113,7 @@ class Player:
         #barra energia
         pygame.draw.rect(screen, constantes.bar_background,
                                 (x_offset, y_offset, bar_width, bar_height))
-        pygame.draw.rect(screen, constantes.bar_color,
+        pygame.draw.rect(screen, constantes.energy_color,
                          (x_offset, y_offset, bar_width * (self.energy / constantes.max_energy), bar_height))
     
         #barra de comida 
