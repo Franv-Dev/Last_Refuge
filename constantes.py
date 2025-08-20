@@ -5,10 +5,22 @@ window_width,window_height=800,600 # pantalla principal
 
 
 #tamaño objetos del mapa
+player = 100
 grass = 64 # cesped
 tree = 70 # arboles
 small_stone = 20 # piedras pequeñas
 
+# animaciones
+basic_frames= 6
+
+idle_down  = 0
+idle_right = 1
+idle_up    = 2
+walk_down  = 3
+walk_right = 4
+walk_up    = 5
+frame_size = 32
+animation_delay= 100
 #----
 fps = 60
 
