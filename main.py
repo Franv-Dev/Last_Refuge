@@ -34,7 +34,7 @@ def main():
     status_update_timer = 0
     #bucle de arranque
     while True:
-        dt = clock.tick(constantes.fps)
+        dt = clock.tick(60)
         #evento de cierre
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -62,6 +62,8 @@ def main():
             player.Move(0,-constantes.speed,world)
         if keys[pygame.K_DOWN]:
             player.Move(0,constantes.speed,world)
+        #actualizar tiempo del dia
+        world.update_time(dt)
         
         status_update_timer += dt #actualiza timer
         if status_update_timer >= constantes.status_update_interval:  
@@ -82,10 +84,15 @@ def main():
         energy_text = font.render(f"Energy:{int(player.energy)}", True, constantes.color_white)
         food_text = font.render(f"Food: {int(player.food)}", True, constantes.color_white)
         thirst_text = font.render(f"Thirst: {int(player.thirst)}", True, constantes.color_white)
+        # texto de indicador del tiempo
+        time_of_day = (world.current_time / constantes.day_length) * 24 #formato 24hs
+        time_text = font.render(f"Time: {int(time_of_day)}:00", True, constantes.color_white)
 
-        window.blit(energy_text, (10,constantes.window_height - 70))
-        window.blit(food_text, (10,constantes.window_height - 45))
-        window.blit(thirst_text, (10,constantes.window_height - 20))
+        
+        window.blit(energy_text, (10,constantes.window_height - 90))
+        window.blit(food_text, (10,constantes.window_height - 65))
+        window.blit(thirst_text, (10,constantes.window_height - 40))
+        window.blit(time_text, (10,constantes.window_height - 15))
 
         #actualizar visualizacion de la ventana
         pygame.display.flip()
