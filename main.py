@@ -48,8 +48,10 @@ def main():
                     show_inventory = not show_inventory
                 if event.key == pygame.K_f:
                     player.update_food(20)
+                    player.update_energy(10)  # también aumenta energía
                 if event.key == pygame.K_t:
                     player.update_thirst(20)
+                    player.update_energy(10)  # también aumenta energía
 
         #configurar teclas
         keys = pygame.key.get_pressed()
@@ -92,7 +94,7 @@ def main():
         window.blit(energy_text, (10,constantes.window_height - 90))
         window.blit(food_text, (10,constantes.window_height - 65))
         window.blit(thirst_text, (10,constantes.window_height - 40))
-        window.blit(time_text, (10,constantes.window_height - 15))
+        window.blit(time_text, (10,constantes.window_height - 20))
 
         #actualizar visualizacion de la ventana
         pygame.display.flip()

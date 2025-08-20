@@ -1,4 +1,3 @@
-
 import pygame
 import constantes
 from personajes.elements.trees import Tree,SmallStone
@@ -42,7 +41,9 @@ class World:
         else: 
             #entre 00: y 06:00 noche
             self.day_overlay.fill(constantes.night_color)
-            alpha = constantes.max_darkness          
+            alpha = 255  # Valor por defecto
+        # Calcula alpha según la hora
+        alpha = min(180, alpha)  # nunca más de 180
         self.day_overlay.set_alpha(alpha)
 
     def Draw(self,interfaz):
@@ -63,4 +64,3 @@ class World:
         instruction_text = font.render("Press 'I' to open inventory",
                                     True,constantes.color_white)
         interfaz.blit(instruction_text,(10,10))
-        

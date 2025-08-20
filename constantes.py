@@ -43,7 +43,7 @@ food_color = (255, 165, 0)  # naranja
 thirst_color = (0, 191, 255)  # azul claro
 bar_background = (100, 100, 100)  # color de fondo de la barra gris oscuro
 #velocidad
-speed = 5
+speed = 2
 #intervalo de tiempos
 status_update_interval = 1000  # en milisegundos
 #sistema dia/noche
