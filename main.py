@@ -29,8 +29,12 @@ def main():
     player = Player(constantes.window_width//2,constantes.window_height//2)
     
     show_inventory = False
+    
+    
+    status_update_timer = 0
     #bucle de arranque
     while True:
+        dt = clock.tick(constantes.fps)
         #evento de cierre
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -42,7 +46,11 @@ def main():
                     player.interact(world)
                 if event.key == pygame.K_i:
                     show_inventory = not show_inventory
-        
+                if event.key == pygame.K_f:
+                    player.update_food(20)
+                if event.key == pygame.K_t:
+                    player.update_thirst(20)
+
         #configurar teclas
         keys = pygame.key.get_pressed()
 
@@ -54,6 +62,15 @@ def main():
             player.Move(0,-constantes.speed,world)
         if keys[pygame.K_DOWN]:
             player.Move(0,constantes.speed,world)
+        
+        status_update_timer += dt #actualiza timer
+        if status_update_timer >= constantes.status_update_interval:  
+            player.update_status()  # disminuir status
+            status_update_timer = 0
+        if player.energy <= 0 or player.food <= 0 or player.thirst <= 0:
+            print("Game Over")
+            pygame.quit()
+            sys.exit()
 
         #dibujo de objetos y jugador
         world.Draw(window)
@@ -61,10 +78,18 @@ def main():
         if show_inventory:
             player.draw_inventory(window)
         
+        font= pygame.font.Font(None, 24)
+        energy_text = font.render(f"Energy:{int(player.energy)}", True, constantes.color_white)
+        food_text = font.render(f"Food: {int(player.food)}", True, constantes.color_white)
+        thirst_text = font.render(f"Thirst: {int(player.thirst)}", True, constantes.color_white)
+
+        window.blit(energy_text, (10,constantes.window_height - 70))
+        window.blit(food_text, (10,constantes.window_height - 45))
+        window.blit(thirst_text, (10,constantes.window_height - 20))
 
         #actualizar visualizacion de la ventana
         pygame.display.flip()
-        clock.tick(constantes.fps)
+        
 
 
 if __name__ == "__main__":

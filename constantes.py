@@ -29,6 +29,8 @@ max_thirst = 100
 energy_color = (255, 215, 0)  # amarillo
 food_color = (255, 165, 0)  # naranja
 thirst_color = (0, 191, 255)  # azul claro
-bar_background_color = (100, 100, 100)  # color de fondo de la barra gris oscuro
+bar_background = (100, 100, 100)  # color de fondo de la barra gris oscuro
 #velocidad
 speed = 5
+#intervalo de tiempos
+status_update_interval = 1000  # en milisegundos

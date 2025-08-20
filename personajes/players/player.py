@@ -27,7 +27,10 @@ class Player:
         path = f"assets//images//objects//{filename}"
         image = pygame.image.load(path).convert_alpha()
         return pygame.transform.scale(image,(40,40))
-        
+    #diseño de barras de estado
+    def draw(self,window):
+        window.blit(self.image,(self.x,self.y))
+        self.draw_status_bars(window)
 
     def Draw(self,interfaz):
         interfaz.blit(self.image,(self.x,self.y))
@@ -108,7 +111,29 @@ class Player:
         x_offset=10
         y_offset=10
         #barra energia
-        pygame.draw.rect(screen, constantes.bar_background_color,
+        pygame.draw.rect(screen, constantes.bar_background,
                                 (x_offset, y_offset, bar_width, bar_height))
         pygame.draw.rect(screen, constantes.bar_color,
                          (x_offset, y_offset, bar_width * (self.energy / constantes.max_energy), bar_height))
+    
+        #barra de comida 
+        y_offset += 15
+        pygame.draw.rect(screen, constantes.bar_background,
+                        (x_offset, y_offset, bar_width, bar_height))
+        pygame.draw.rect(screen, constantes.food_color,
+                        (x_offset, y_offset, bar_width * (self.food / constantes.max_food), bar_height))
+        #barra de sed
+        y_offset += 15
+        pygame.draw.rect(screen, constantes.bar_background,
+                        (x_offset, y_offset, bar_width, bar_height))
+        pygame.draw.rect(screen, constantes.thirst_color,
+                        (x_offset, y_offset, bar_width * (self.thirst / constantes.max_thirst), bar_height))
+        
+    def update_status(self):
+        self.update_food(-1)
+        self.update_thirst(-2)
+        #
+        if self.food < constantes.max_food * 0.2 or self.thirst < constantes.max_thirst * 0.2:
+                self.update_energy(-0.5)  # reduce la energia en base la comida y movimiento
+        else:
+            self.update_energy(0.1)  # recupera un poco de energia si hay suficiente comida y sed
