@@ -35,11 +35,11 @@ speed = 5
 #intervalo de tiempos
 status_update_interval = 1000  # en milisegundos
 #sistema dia/noche
-day_length = 24000 # (ajustar duracion del dia)
-dawn_time = 6000 # amanecer a las 6:00
-morning_time = 8000 # mañana a las 8:00
-dusk_time = 18000 # atardecer a las 18:00
-midnight = 24000 # medianoche a las 00:00
+day_length = 72000 # (ajustar duracion del dia)
+dawn_time = 18000 # amanecer a las 6:00
+morning_time = 24000 # mañana a las 8:00
+dusk_time = 54000 # atardecer a las 18:00
+midnight = 72000 # medianoche a las 00:00
 max_darkness = 210  # (ajustar nivel maximo de oscuridad)(0-255)
 #colores para iluminacion
 night_color = (20, 20, 50)  # azul oscuro para la noche
