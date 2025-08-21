@@ -94,7 +94,12 @@ hotbar_y = window_height - slot_size - margin
 # Main inventory position (centrado)
 inventory_x = (window_width - (slot_size * inventory_cols)) // 2
 inventory_y = (window_height - (slot_size * inventory_rows)) // 2
-
+#crafting constants
+crafting_grid_size = 2
+crafting_result_slot_x = inventory_x + (slot_size * (inventory_cols + 1))
+crafting_result_slot_y = inventory_y
+crafting_grid_x = inventory_x + (slot_size * (inventory_cols + 1))
+crafting_grid_y = inventory_y + slot_size + 2
 # Colores para inventario
 slot_color = (139, 139, 139)
 slot_border = (100, 100, 100)

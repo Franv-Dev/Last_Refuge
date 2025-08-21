@@ -97,7 +97,7 @@ def main():
 
         # Dibuja la grilla central SOLO si show_inventory es True
         if show_inventory:
-            player.draw_inventory(window, show_inventory)
+            player.inventory.draw(window, show_inventory=True)
 
         # Dibuja las barras de estado en la esquina superior izquierda
         player.draw_status_bars(window)
