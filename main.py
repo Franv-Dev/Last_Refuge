@@ -1,46 +1,44 @@
-import pygame,sys
+import pygame, sys
 import constantes
 from personajes.players.player import Player 
 from personajes.worlds import World
+import random
 
-#inicializar pygame
+# Inicializar pygame
 pygame.init()
 
-#ancho y alto de pantalla
-window = pygame.display.set_mode(((
-    constantes.window_width,constantes.window_height
-    )))
+# Ancho y alto de pantalla
+window = pygame.display.set_mode((
+    constantes.window_width, constantes.window_height
+))
 
-#nombre 
+# Nombre de la ventana
 pygame.display.set_caption("juego nuevo")
 
-#definir movimiento
-mov_left,mov_right,mov_up,mov_down = False,False,False,False
-
-
-#controlador de velocidad(frame rate)
-
+# Controlador de velocidad (frame rate)
 clock = pygame.time.Clock()
 
-#funcion principal
+# Función principal
 def main():
-    window.fill(constantes.color_blue)#pintar fondo
-    world = World(constantes.window_width,constantes.window_height)
-    player = Player(constantes.window_width//2,constantes.window_height//2)
-    
+    clock = pygame.time.Clock()
+    window.fill(constantes.color_blue)  # Pintar fondo
+    world = World(constantes.window_width, constantes.window_height)
+    player = Player(constantes.window_width // 2, constantes.window_height // 2)
     show_inventory = False
-    
-    
+
+    camera_x = 0
+    camera_y = 0
+
     status_update_timer = 0
-    #bucle de arranque
+    # Bucle de arranque
     while True:
         dt = clock.tick(60)
-        #evento de cierre
+        # Evento de cierre
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()  
                 sys.exit()
-            #presionar tecla
+            # Presionar tecla
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_e:
                     player.interact(world)
@@ -48,58 +46,54 @@ def main():
                     show_inventory = not show_inventory
                 if event.key == pygame.K_f:
                     player.update_food(20)
-                    player.update_energy(10)  # también aumenta energía
+                    player.update_energy(10)
                 if event.key == pygame.K_t:
                     player.update_thirst(20)
-                    player.update_energy(10)  # también aumenta energía
+                    player.update_energy(10)
 
-        #configurar teclas
+        # Configurar teclas
+        dx = dy = 0
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_LEFT]:
-            player.Move(-constantes.speed,0,world) #llamar el metodo del movimiento
+            dx -= 5
         if keys[pygame.K_RIGHT]:
-            player.Move(constantes.speed,0,world)
+            dx += 5
         if keys[pygame.K_UP]:
-            player.Move(0,-constantes.speed,world)
+            dy -= 5
         if keys[pygame.K_DOWN]:
-            player.Move(0,constantes.speed,world)
-        #actualizar tiempo del dia
+            dy += 5
+
+        player.Move(dx, dy, world) 
+        camera_x = player.x - constantes.window_width // 2
+        camera_y = player.y - constantes.window_height // 2
+
+        world.update_chunk(player.x, player.y)
         world.update_time(dt)
         
-        status_update_timer += dt #actualiza timer
+        status_update_timer += dt
         if status_update_timer >= constantes.status_update_interval:  
-            player.update_status()  # disminuir status
+            player.update_status()
             status_update_timer = 0
         if player.energy <= 0 or player.food <= 0 or player.thirst <= 0:
             print("Game Over")
             pygame.quit()
             sys.exit()
 
-        #dibujo de objetos y jugador
-        world.Draw(window)
-        player.draw(window)
+        # Limpiar pantalla
+        window.fill((0,0,0))
+
+        # Dibujo de objetos y jugador
+        world.Draw(window, camera_x, camera_y)
+        player.draw(window, camera_x, camera_y)
         if show_inventory:
             player.draw_inventory(window)
-        
-        font= pygame.font.Font(None, 24)
-        energy_text = font.render(f"Energy:{int(player.energy)}", True, constantes.color_white)
-        food_text = font.render(f"Food: {int(player.food)}", True, constantes.color_white)
-        thirst_text = font.render(f"Thirst: {int(player.thirst)}", True, constantes.color_white)
-        # texto de indicador del tiempo
-        time_of_day = (world.current_time / constantes.day_length) * 24 #formato 24hs
-        time_text = font.render(f"Time: {int(time_of_day)}:00", True, constantes.color_white)
 
-        
-        window.blit(energy_text, (10,constantes.window_height - 90))
-        window.blit(food_text, (10,constantes.window_height - 65))
-        window.blit(thirst_text, (10,constantes.window_height - 40))
-        window.blit(time_text, (10,constantes.window_height - 20))
+        # Dibuja las barras de estado en la esquina superior izquierda
+        player.draw_status_bars(window)
 
-        #actualizar visualizacion de la ventana
+        # Actualizar visualización de la ventana
         pygame.display.flip()
-        
-
 
 if __name__ == "__main__":
     main()

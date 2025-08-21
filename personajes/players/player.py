@@ -21,6 +21,7 @@ class Player:
         self.current_state = idle_down  # ← Inicialización correcta
         self.moving = False
         self.facing_left = False
+        self.is_running = False
 
         # Cargar animaciones
         self.animations = self.load_animations()
@@ -33,6 +34,7 @@ class Player:
         self.energy = max_energy
         self.food = max_food
         self.thirst = max_thirst
+        self.stamina = max_stamina
 
     def load_animations(self):
         animations = {}
@@ -47,7 +49,8 @@ class Player:
 
     def update_animation(self):
         current_time = pygame.time.get_ticks()
-        if current_time - self.animation_timer > self.animation_delay:
+        animation_speed = running_animation_delay if self.is_running else animation_delay
+        if current_time - self.animation_timer > animation_speed:
             self.animation_frame = (self.animation_frame + 1) % basic_frames
             self.animation_timer = current_time
 
@@ -56,30 +59,40 @@ class Player:
         image = pygame.image.load(path).convert_alpha()
         return pygame.transform.scale(image, (40, 40))
 
-    def draw(self, window):
+    def draw(self, interfaz, camera_x, camera_y):
+        interfaz_x = self.x - camera_x
+        interfaz_y = self.y - camera_y
+
         current_frame = self.animations[self.current_state][self.animation_frame]
         if self.facing_left:
-            current_frame = pygame.transform.flip(current_frame, True, False)
-        window.blit(current_frame, (self.x, self.y))
-        self.draw_status_bars(window)
-
-    def Draw(self, interfaz):
-        return self.draw(interfaz)
-
+            current_frame = pygame.transform.flip(current_frame, flip_x=True, flip_y=False)   
+        interfaz.blit(current_frame, (interfaz_x, interfaz_y))
+    
     def Move(self, dx, dy, world):
         self.moving = dx != 0 or dy != 0
-        if dy > 0:
-            self.current_state = walk_down
-        elif dy < 0:
-            self.current_state = walk_up
-        elif dx > 0:
-            self.current_state = walk_right
-            self.facing_left = False
-        elif dx < 0:
-            self.current_state = walk_right
-            self.facing_left = True
-        else:
-            self.current_state = idle_down
+        if self.moving:
+            speed_multiplier = run_speed if self.is_running and self.stamina > 0 else walk_Speed
+            dx *= speed_multiplier / walk_Speed
+            dy *= speed_multiplier / walk_Speed
+            if dy > 0:
+                self.current_state = walk_down
+                self.facing_left = False
+            elif dy < 0:
+                self.current_state = walk_up
+                self.facing_left = False
+            elif dx > 0:
+                self.current_state = walk_right
+                self.facing_left = False
+            elif dx < 0:
+                self.current_state = walk_right
+                self.facing_left = True
+            else: 
+                if self.current_state == walk_down:
+                    self.current_state = idle_down
+                elif self.current_state == walk_up:
+                    self.current_state = idle_up
+                elif self.current_state == walk_right:
+                    self.current_state = idle_right
 
         new_x = self.x + dx
         new_y = self.y + dy
@@ -87,16 +100,20 @@ class Player:
         # Colisión con árboles
         for tree in world.trees:
             if self.check_collision(new_x, new_y, tree):
-                return  # No se mueve si hay colisión
-
-        # Mantener dentro de la pantalla
-        self.x = max(0, min(new_x, window_width - self.size))
-        self.y = max(0, min(new_y, window_height - self.size))
+                self.moving = False
+                return
+        self.x = new_x
+        self.y = new_y
 
         self.update_animation()
-        self.update_energy(-0.1)       
-    def update_time(self, dt):
-        alpha = min(180, calculo_de_alpha)  # nunca más de 180
+        
+        if self.moving:
+            if self.is_running and self.stamina > 0:
+                self.update_stamina = (-stamina_decrease_rate)
+                self.update_energy = (-movement_energy_cost * 2)
+            else:
+                self.update_energy(-movement_energy_cost)
+                self.update_stamina(stamina_increase_rate)
         
     def check_collision(self, x, y, obj):
         return (x < obj.x + obj.size * 0.75 and x + self.size * 0.75 > obj.x and
@@ -107,24 +124,26 @@ class Player:
                 abs(self.y - obj.y) <= self.size + 5)
 
     def interact(self, world):
-        for tree in world.trees:
-            if self.is_near(tree):
-                if not hasattr(tree, "hits"):
-                    tree.hits = 0
-                tree.hits += 1
-                if tree.hits >= 5:
-                    self.inventory["wood"] += 5
-                    world.trees.remove(tree)
-                break
-        for stone in world.small_stone:
-            if self.is_near(stone):
-                self.inventory["stone"] += 1
-                world.small_stone.remove(stone)
-                break
+        # Talar árbol
+        for chunk in world.activate_chunks.values():
+            for tree in chunk.trees:
+                if self.is_near(tree):
+                    if tree.chop():
+                        self.inventory["wood"] += 1
+                    return  # Solo interactúa con un árbol por pulsación
+
+        # Recolectar piedra
+        for chunk in world.activate_chunks.values():
+            for stone in chunk.small_stones:
+                if self.is_near(stone):
+                    if stone.collect():
+                        self.inventory["stone"] += 5
+                    return  # Solo interactúa con una piedra por pulsación
 
     def draw_inventory(self, interfaz):
+        # Fondo semitransparente
         background = pygame.Surface((window_width, window_height), pygame.SRCALPHA)
-        background.fill(color_transp)
+        background.fill((30, 30, 30, 200))  # Gris oscuro, alfa 200
         interfaz.blit(background, (0, 0))
 
         font = pygame.font.Font(None, 36)
@@ -141,7 +160,7 @@ class Player:
             y_offset += 60
 
         close_text = item_font.render("Press 'I' to close inventory", True, color_white)
-        interfaz.blit(close_text, (window_width // 2 - close_text.get_width() // 2, window_height - 40))
+        interfaz.blit(close_text, (window_width // 2 - close_text.get_width() // 2, window_height - 50))
 
     def update_energy(self, amount):
         self.energy = max(0, min(self.energy + amount, max_energy))
@@ -151,6 +170,9 @@ class Player:
 
     def update_thirst(self, amount):
         self.thirst = max(0, min(self.thirst + amount, max_thirst))
+
+    def update_stamina(self, amount):
+        self.stamina = max(0, min(self.stamina + amount, max_stamina))
 
     def draw_status_bars(self, screen):
         bar_width = 100
@@ -168,9 +190,16 @@ class Player:
         y_offset += 15
         pygame.draw.rect(screen, bar_background, (x_offset, y_offset, bar_width, bar_height))
         pygame.draw.rect(screen, thirst_color, (x_offset, y_offset, bar_width * (self.thirst / max_thirst), bar_height))
+        # Resistencia
+        y_offset += 15
+        pygame.draw.rect(screen, bar_background, (x_offset, y_offset, bar_width, bar_height))
+        pygame.draw.rect(screen, stamina_color, (x_offset, y_offset, bar_width * (self.stamina / max_stamina), bar_height))
 
     def update_status(self):
-        self.update_food(-0.2)
-        self.update_thirst(-0.2)
+        self.update_food(-food_decrease_rate)
+        self.update_thirst(-thirst_decrease_rate)
+
         if self.food < max_food * 0.2 or self.thirst < max_thirst * 0.2:
-            self.update_energy(-0.5)
+            self.update_energy(-energy_decrease_rate)
+        else:
+            self.update_energy(energy_increase_rate)
