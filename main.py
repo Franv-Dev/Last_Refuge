@@ -50,6 +50,10 @@ def main():
                 if event.key == pygame.K_t:
                     player.update_thirst(20)
                     player.update_energy(10)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                player.inventory.handle_click(pygame.mouse.get_pos(), event.button, show_inventory)
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                player.inventory.handle_click(pygame.mouse.get_pos(), event.button, show_inventory)
 
         # Configurar teclas
         dx = dy = 0
@@ -63,8 +67,9 @@ def main():
             dy -= 5
         if keys[pygame.K_DOWN]:
             dy += 5
-
+        player.is_running = keys[pygame.K_LSHIFT] and player.stamina > 0
         player.Move(dx, dy, world) 
+
         camera_x = player.x - constantes.window_width // 2
         camera_y = player.y - constantes.window_height // 2
 
@@ -86,8 +91,13 @@ def main():
         # Dibujo de objetos y jugador
         world.Draw(window, camera_x, camera_y)
         player.draw(window, camera_x, camera_y)
+
+        # Dibuja SIEMPRE la hotbar (inventario inferior)
+        player.inventory.draw(window, show_inventory=False)
+
+        # Dibuja la grilla central SOLO si show_inventory es True
         if show_inventory:
-            player.draw_inventory(window)
+            player.draw_inventory(window, show_inventory)
 
         # Dibuja las barras de estado en la esquina superior izquierda
         player.draw_status_bars(window)
