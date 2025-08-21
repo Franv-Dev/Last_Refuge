@@ -1,6 +1,7 @@
 import os
 import pygame
 from constantes import *
+import constantes
 from inventario.inventory import Inventory
 
 class Player:
@@ -13,7 +14,10 @@ class Player:
         # Cargar hoja de sprites
         image_path = os.path.join('assets', 'images', 'player', 'player1.png')
         self.sprite_sheet = pygame.image.load(image_path).convert_alpha()
-
+        #cargar hojas de sprite de animaciones del hacha
+        self.action_sprite_sheet = pygame.image.load(
+            os.path.join('assets', 'images', 'player', 'action_sprites.png')
+        ).convert_alpha()
         # Propiedades de animación
         self.frame_size = frame_size
         self.animation_frame = 0
@@ -23,9 +27,19 @@ class Player:
         self.moving = False
         self.facing_left = False
         self.is_running = False
-
+        #agregar propiedades de animacion del hacha
+        self.is_chopping = False
+        self.chop_timer=0
+        self.chop_frame=0
         # Cargar animaciones
         self.animations = self.load_animations()
+        
+        
+        #cargar animaciones del hacha
+        self.axe_animations = self.load_axe_animations()
+        
+        
+        
         self.item_images = {
             "wood": self.load_item_image("wood.png"),
             "stone": self.load_item_image("small_stone.png")
@@ -37,23 +51,67 @@ class Player:
         self.thirst = max_thirst
         self.stamina = max_stamina
 
+
+
     def load_animations(self):
         animations = {}
-        for state in range(6):
+        for state in range(6):  # 6 estados de animación
             frames = []
-            for frame in range(basic_frames):
-                rect = pygame.Rect(frame * self.frame_size, state * self.frame_size, self.frame_size, self.frame_size)
-                image = self.sprite_sheet.subsurface(rect)
-                frames.append(image)
+            for frame in range(basic_frames):  # 6 frames por animación
+                temp_surface = pygame.Surface((self.frame_size, self.frame_size), pygame.SRCALPHA)
+                temp_surface.blit(self.sprite_sheet, (0, 0),
+                                (frame * self.frame_size, state * self.frame_size, self.frame_size, self.frame_size))
+                surface = pygame.Surface((constantes.player, constantes.player), pygame.SRCALPHA)
+                scaled_temp = pygame.transform.scale(temp_surface, (constantes.player, constantes.player))
+                surface.blit(scaled_temp, (0, 0))
+                frames.append(surface)
             animations[state] = frames
         return animations
 
+    def load_axe_animations(self):
+        animation = {}
+        
+        
+        
+        row_mapping = {
+            3: 3,
+            4: 4,
+            5: 5
+            
+        }
+        for state,row in row_mapping.items():
+            frames = []
+            for frame in range(axe_frames):
+                temp_surface=pygame.Surface((constantes.action_frame_size,constantes.action_frame_size), pygame.SRCALPHA)
+            x = (frame % axe_cols)* constantes.action_frame_size
+            frame_rect=pygame.Rect(x, row * constantes.action_frame_size,
+                                constantes.action_frame_size,
+                                constantes.action_frame_size)
+            #superficie temporal 
+            temp_surface.blit(self.action_sprite_sheet, (0, 0), frame_rect)
+            #escala
+            action_scale = constantes.action_frame_size/constantes.frame_size
+            action_size = int(constantes.frame_size * action_scale)
+            surface = pygame.Surface ((action_size, action_size), pygame.SRCALPHA)
+            scaled_temp = pygame.transform.scale(temp_surface, (action_size, action_size))
+            surface.blit(scaled_temp, (0, 0))
+            frames.append(surface)
+        animation[state] = frames
+        return animation
+
     def update_animation(self):
         current_time = pygame.time.get_ticks()
-        animation_speed = running_animation_delay if self.is_running else animation_delay
-        if current_time - self.animation_timer > animation_speed:
-            self.animation_frame = (self.animation_frame + 1) % basic_frames
-            self.animation_timer = current_time
+        
+        if self.is_chopping and current_time - self.chop_timer > constantes.axe_animation_delay:
+            self.chop_timer = current_time
+            self.chop_frame = (self.chop_frame + 1) % constantes.axe_frames  
+            if self.chop_frame == 0:  # animación completada
+                self.is_chopping = False
+        else:
+            animation_speed = running_animation_delay if self.is_running else animation_delay
+            if current_time - self.animation_timer > animation_speed:
+                self.animation_frame = (self.animation_frame + 1) % basic_frames
+                self.animation_timer = current_time
 
     def load_item_image(self, filename):
         path = os.path.join("assets", "images", "objects", filename)
@@ -63,11 +121,28 @@ class Player:
     def draw(self, interfaz, camera_x, camera_y):
         interfaz_x = self.x - camera_x
         interfaz_y = self.y - camera_y
+        if self.is_chopping:
+            if self.current_state in [idle_right, walk_right]:
+                current_frame = self.axe_animations[3][self.chop_frame]
+                if self.facing_left:
+                    current_frame = pygame.transform.flip(current_frame, True, False)
+            elif self.current_state in [idle_down, walk_down]:
+                current_frame = self.axe_animations[4][self.chop_frame]
+            elif self.current_state in [idle_up, walk_up]:
+                current_frame = self.axe_animations[5][self.chop_frame]
+        else:
+            current_frame = self.animations[self.current_state][self.animation_frame]
+            if self.facing_left:
+                current_frame = pygame.transform.flip(current_frame, flip_x=True, flip_y=False)
+        # centrado del frame de hacha (versión en minúsculas)
+        if self.is_chopping:
+            action_scale = constantes.action_frame_size / constantes.frame_size
+            size_diff = int(constantes.player * (action_scale - 1))
+            interfaz.blit(current_frame, (interfaz_x - size_diff // 2, interfaz_y - size_diff // 2))
+        else:
+            interfaz.blit(current_frame, (interfaz_x, interfaz_y))
+        self.draw_status_bars(interfaz)
 
-        current_frame = self.animations[self.current_state][self.animation_frame]
-        if self.facing_left:
-            current_frame = pygame.transform.flip(current_frame, flip_x=True, flip_y=False)
-        interfaz.blit(current_frame, (interfaz_x, interfaz_y))
 
     def Move(self, dx, dy, world):
         self.moving = dx != 0 or dy != 0
@@ -125,21 +200,23 @@ class Player:
                 abs(self.y - obj.y) <= self.size + 5)
 
     def interact(self, world):
-        # Talar árbol
-        for chunk in world.activate_chunks.values():
-            for tree in chunk.trees:
-                if self.is_near(tree):
-                    if tree.chop():
-                        self.inventory.add_item("wood")
-                    return
-
+        for tree in world.trees:
+            if self.is_near(tree):
+                has_axe = self.inventory.has_axe_equipped()
+                if has_axe:
+                    self.is_chopping = True
+                    self.chop_timer = pygame.time.get_ticks()
+                    self.chop_frame = 0
+                    if tree.chop(with_axe=has_axe):
+                        self.inventory.add_item('wood')
+                return
         # Recolectar piedra
-        for chunk in world.activate_chunks.values():
-            for stone in chunk.small_stones:
-                if self.is_near(stone):
-                    if stone.collect():
-                        self.inventory.add_item("stone")
-                    return
+        for stone in world.small_stone:  # ← aquí debe ser small_stone
+            if self.is_near(stone):
+                self.inventory["stone"] += 1
+                world.small_stone.remove(stone)
+                break
+
 
     def draw_hotbar(self, interfaz):
         # Dibuja la hotbar (inventario inferior) siempre

@@ -19,6 +19,7 @@ walk_down  = 3
 walk_right = 4
 walk_up    = 5
 frame_size = 32
+action_frame_size = 48
 animation_delay = 100
 running_animation_delay = 50
 fps = 60
@@ -100,6 +101,15 @@ crafting_result_slot_x = inventory_x + (slot_size * (inventory_cols + 1))
 crafting_result_slot_y = inventory_y
 crafting_grid_x = inventory_x + (slot_size * (inventory_cols + 1))
 crafting_grid_y = inventory_y + slot_size + 2
+# hand slots constants
+left_hand_slot_x = hotbar_x - slot_size - margin
+left_hand_slot_y = hotbar_y
+right_hand_slot_x = hotbar_x + (slot_size * hotbar_slots) + margin
+right_hand_slot_y = hotbar_y
+#axe animation settings
+axe_cols = 2
+axe_frames = 2
+axe_animation_delay = 200
 # Colores para inventario
 slot_color = (139, 139, 139)
 slot_border = (100, 100, 100)
