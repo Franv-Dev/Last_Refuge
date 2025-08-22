@@ -1,8 +1,7 @@
 import pygame
 import constantes
-from personajes.elements.trees import Tree, SmallStone
+from personajes.elements.trees import Tree, SmallStone, Farmland
 import random
-import os
 from pygame import Surface
 
 class WorldChunk:
@@ -12,6 +11,7 @@ class WorldChunk:
         self.y = y
         self.window_width = window_width
         self.window_height = window_height
+        self.farmland_tiles = {}
 
         # Semilla única basada en coordenadas
         chunk_seed = hash(f"{x},{y}")
@@ -47,9 +47,17 @@ class WorldChunk:
 
         for y in range(int(start_y), int(end_y)):
             for x in range(int(start_x), int(end_x)):
-                interfaz_x = self.x + x * constantes.grass - camera_x
-                interfaz_y = self.y + y * constantes.grass - camera_y
+                tile_x = self.x + x * constantes.grass
+                tile_y = self.y + y * constantes.grass
+                interfaz_x = tile_x - camera_x
+                interfaz_y = tile_y - camera_y
+
+                tile_key = (tile_x, tile_y)
+                # dibujar pasto
                 interfaz.blit(grass_image, (interfaz_x, interfaz_y))
+                # si hay farmland encima, se dibuja arriba
+                if tile_key in self.farmland_tiles:
+                    self.farmland_tiles[tile_key].draw(interfaz, camera_x, camera_y)
 
         # Limpiar agotados
         self.trees        = [t for t in self.trees if not t.is_depleted()]
@@ -65,14 +73,13 @@ class WorldChunk:
 
 
 class World:
-
     def __init__(self, window_width, window_height):
         self.chunk_size = constantes.window_width
-        self.activate_chunks = {}
+        self.active_chunks = {}
         self.view_window_width = window_width
         self.window_height = window_height
 
-        imagen_path = "assets//images//objects//grass.png"
+        imagen_path = "assets/images/objects/grass.png"
         self.grass_image = pygame.image.load(imagen_path)
         self.grass_image = pygame.transform.scale(self.grass_image, (constantes.grass, constantes.grass))
 
@@ -95,10 +102,10 @@ class World:
 
     def generate_chunk(self, chunk_x, chunk_y):
         key = (chunk_x, chunk_y)
-        if key not in self.activate_chunks:
+        if key not in self.active_chunks:
             x = chunk_x * self.chunk_size
             y = chunk_y * self.chunk_size
-            self.activate_chunks[key] = WorldChunk(x, y, self.chunk_size, self.chunk_size)
+            self.active_chunks[key] = WorldChunk(x, y, self.chunk_size, self.chunk_size)
 
     def update_chunk(self, player_x, player_y):
         current_chunk = self.get_chunk_key(player_x, player_y)
@@ -110,11 +117,11 @@ class World:
 
         # Limpiar lejos
         to_remove = []
-        for key in list(self.activate_chunks.keys()):
+        for key in list(self.active_chunks.keys()):
             if abs(key[0] - current_chunk[0]) > 2 or abs(key[1] - current_chunk[1]) > 2:
                 to_remove.append(key)
         for key in to_remove:
-            del self.activate_chunks[key]
+            del self.active_chunks[key]
 
     def update_time(self, dt):
         self.current_time = (self.current_time + dt) % constantes.day_length
@@ -142,21 +149,51 @@ class World:
     def trees(self):
         # lista “aplanada” de árboles visibles
         all_trees = []
-        for chunk in self.activate_chunks.values():
+        for chunk in self.active_chunks.values():
             all_trees.extend(chunk.trees)
         return all_trees
 
     @property
     def small_stone(self):
-        # OJO: nombre singular, devuelve lista (igual que en tu archivo)
         all_stones = []
-        for chunk in self.activate_chunks.values():
+        for chunk in self.active_chunks.values():
             all_stones.extend(chunk.small_stones)
         return all_stones
 
+    def add_farmland(self, x, y):
+        """añade un tile de tierra cultivada en la posición especificada"""
+        # obtener el chunk correspondiente a la posición
+        chunk_key = self.get_chunk_key(x, y)
+        chunk = self.active_chunks.get(chunk_key)
+
+        if chunk:
+            # alinear la posición a la cuadrícula
+            grid_x = (x // constantes.grass) * constantes.grass
+            grid_y = (y // constantes.grass) * constantes.grass
+
+            # verificar si hay árboles en esta posición
+            for tree in chunk.trees:
+                if (grid_x < tree.x + tree.size and grid_x + constantes.grass > tree.x and
+                    grid_y < tree.y + tree.size and grid_y + constantes.grass > tree.y):
+                    return False
+
+            # verificar si hay piedras pequeñas en esta posición
+            for stone in chunk.small_stones:
+                if (grid_x < stone.x + stone.size and grid_x + constantes.grass > stone.x and
+                    grid_y < stone.y + stone.size and grid_y + constantes.grass > stone.y):
+                    return False
+
+            # si no hay obstáculos, crear el tile de farmland
+            tile_key = (grid_x, grid_y)
+            if tile_key not in chunk.farmland_tiles:
+                chunk.farmland_tiles[tile_key] = Farmland(grid_x, grid_y)
+            return True
+
+        return False
+
     def Draw(self, interfaz, camera_x, camera_y):
         # Pasto + elementos por chunk
-        for chunk in self.activate_chunks.values():
+        for chunk in self.active_chunks.values():
             chunk.draw(interfaz, self.grass_image, camera_x, camera_y)
         # Overlay de día/noche
         interfaz.blit(self.day_overlay, (0, 0))

@@ -241,6 +241,8 @@ class Player:
             self.is_hoeing = True
             self.hoe_timer = pygame.time.get_ticks()
             self.hoe_frame = 0
+            #intentar crear cultivo
+            world.add_farmland(self.x, self.y)
         for tree in world.trees:
             if self.is_near(tree):
                 has_axe = self.inventory.has_axe_equipped()
