@@ -28,8 +28,10 @@ class Tree:
                 self.wood -= 1
             return True
         return False
+
     def is_depleted(self):
         return self.wood <= 0
+
 
 class SmallStone:
     def __init__(self, x, y):
@@ -53,6 +55,6 @@ class SmallStone:
             self.stone -= 1
             return True
         return False
-    
+
     def is_depleted(self):
         return self.stone <= 0

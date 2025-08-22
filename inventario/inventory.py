@@ -24,17 +24,17 @@ class Inventory:
 
         # cargar imagenes de items
         self.item_images = {
-            "wood": os.path.join("assets", "images", "objects", "wood.png"),
+            "wood":  os.path.join("assets", "images", "objects", "wood.png"),
             "stone": os.path.join("assets", "images", "objects", "small_stone.png"),
-            "axe": os.path.join("assets", "images", "objects", "axe.png")
+            "axe":   os.path.join("assets", "images", "objects", "axe.png"),
         }
 
-        #definir recetas
-        # ARREGLO: usar self.recipes (el código más abajo lo usa así)
-        self.recipes = {  # ← antes estaba "recipies"
+        # definir recetas
+        # ARREGLO: usar "recipes" (el chequeo abajo lo usa así) 
+        self.recipes = {
             'axe': {
                 'pattern': [('wood', 'stone'), (None, None)],
-                'result': 'axe'
+                'result':  'axe'
             }
         }
 
@@ -50,36 +50,35 @@ class Inventory:
                 if self.inventory[row][col] and self.inventory[row][col].name == item_name:
                     self.inventory[row][col].quantity += quantity
                     return True
-        # buscar primer espacio libre en hotbar
+        # primer espacio libre en hotbar
         for i, slot in enumerate(self.hotbar):
             if slot is None:
                 self.hotbar[i] = InventoryItem(item_name, self.item_images[item_name], quantity)
                 return True
-        # buscar primer espacio libre en inventario
+        # primer espacio libre en inventario
         for row in range(constantes.inventory_rows):
             for col in range(constantes.inventory_cols):
                 if self.inventory[row][col] is None:
                     self.inventory[row][col] = InventoryItem(item_name, self.item_images[item_name], quantity)
                     return True
-        return False  # no se pudo agregar el item
+        return False
 
     def draw(self, interfaz, show_inventory=False):
-        #dibujar slot de manos (siempre visible)
+        # ARREGLO: dibujar también los slots de las manos SIEMPRE 
         self._draw_hand_slots(interfaz)
-        #dibujar hotbar(siempre visible)
+        # hotbar siempre
         self._draw_hotbar(interfaz)
-        
 
-        #dibujar inventario principal si está abierto
+        # inventario principal si está abierto
         if show_inventory:
             background = pygame.Surface((constantes.window_width, constantes.window_height), pygame.SRCALPHA)
-            background.fill((0, 0, 0, 128))  # fondo semitransparente
+            background.fill((0, 0, 0, 128))
             interfaz.blit(background, (0, 0))
 
             self._draw_main_inventory(interfaz)
             self._draw_crafting_grid(interfaz)
 
-        # dibujar item arrastrado
+        # item arrastrado
         if self.dragged_item:
             mouse_pos = pygame.mouse.get_pos()
             interfaz.blit(self.dragged_item.image,
@@ -94,13 +93,10 @@ class Inventory:
 
     def _draw_hotbar(self, interfaz):
         for i in range(constantes.hotbar_slots):
-            x = constantes.hotbar_x + i * (constantes.slot_size)
+            x = constantes.hotbar_x + i * constantes.slot_size
             y = constantes.hotbar_y
-
-            pygame.draw.rect(interfaz, constantes.slot_border,
-                             (x, y, constantes.slot_size, constantes.slot_size))
-            pygame.draw.rect(interfaz, constantes.slot_color,
-                             (x + 2, y + 2, constantes.slot_size - 4, constantes.slot_size - 4))
+            pygame.draw.rect(interfaz, constantes.slot_border, (x, y, constantes.slot_size, constantes.slot_size))
+            pygame.draw.rect(interfaz, constantes.slot_color,  (x + 2, y + 2, constantes.slot_size - 4, constantes.slot_size - 4))
             if self.hotbar[i]:
                 self._draw_item(interfaz, self.hotbar[i], x, y)
 
@@ -109,11 +105,8 @@ class Inventory:
             for col in range(constantes.inventory_cols):
                 x = constantes.inventory_x + (col * constantes.slot_size)
                 y = constantes.inventory_y + (row * constantes.slot_size)
-
-                pygame.draw.rect(interfaz, constantes.slot_border,
-                                 (x, y, constantes.slot_size, constantes.slot_size))
-                pygame.draw.rect(interfaz, constantes.slot_color,
-                                 (x + 2, y + 2, constantes.slot_size - 4, constantes.slot_size - 4))
+                pygame.draw.rect(interfaz, constantes.slot_border, (x, y, constantes.slot_size, constantes.slot_size))
+                pygame.draw.rect(interfaz, constantes.slot_color,  (x + 2, y + 2, constantes.slot_size - 4, constantes.slot_size - 4))
                 if self.inventory[row][col]:
                     self._draw_item(interfaz, self.inventory[row][col], x, y)
 
@@ -121,68 +114,52 @@ class Inventory:
         item_x = x + (constantes.slot_size - item.image.get_width()) // 2
         item_y = y + (constantes.slot_size - item.image.get_height()) // 2
         interfaz.blit(item.image, (item_x, item_y))
-
         if item.quantity > 1:
             text = self.font.render(str(item.quantity), True, constantes.color_white)
             text_rect = text.get_rect()
-            text_rect.bottomright = (item_x + item.image.get_width() - 5,
-                                     item_y + item.image.get_height() - 5)
+            text_rect.bottomright = (item_x + item.image.get_width() - 5, item_y + item.image.get_height() - 5)
             interfaz.blit(text, text_rect)
-    def _draw_hand_slots(self, interfaz):
-        # dibujar slot de mano izquierda
-        pygame.draw.rect(
-            interfaz, constantes.slot_border,
-            (constantes.left_hand_slot_x, constantes.left_hand_slot_y,
-            constantes.slot_size, constantes.slot_size)
-        )
-        pygame.draw.rect(
-            interfaz, constantes.slot_color,
-            (constantes.left_hand_slot_x + 2, constantes.left_hand_slot_y + 2,
-            constantes.slot_size - 4, constantes.slot_size - 4)
-        )
-        if self.left_hand:
-            self._draw_item(interfaz, self.left_hand,
-                            constantes.left_hand_slot_x,
-                            constantes.left_hand_slot_y)
 
-        # dibujar slot de mano derecha
-        pygame.draw.rect(
-            interfaz, constantes.slot_border,
-            (constantes.right_hand_slot_x, constantes.right_hand_slot_y,
-            constantes.slot_size, constantes.slot_size)
-        )
-        pygame.draw.rect(
-            interfaz, constantes.slot_color,
-            (constantes.right_hand_slot_x + 2, constantes.right_hand_slot_y + 2,
-            constantes.slot_size - 4, constantes.slot_size - 4)
-        )
+    def _draw_hand_slots(self, interfaz):
+        # izquierda
+        pygame.draw.rect(interfaz, constantes.slot_border,
+                         (constantes.left_hand_slot_x, constantes.left_hand_slot_y, constantes.slot_size, constantes.slot_size))
+        pygame.draw.rect(interfaz, constantes.slot_color,
+                         (constantes.left_hand_slot_x + 2, constantes.left_hand_slot_y + 2, constantes.slot_size - 4, constantes.slot_size - 4))
+        if self.left_hand:
+            self._draw_item(interfaz, self.left_hand, constantes.left_hand_slot_x, constantes.left_hand_slot_y)
+
+        # derecha
+        pygame.draw.rect(interfaz, constantes.slot_border,
+                         (constantes.right_hand_slot_x, constantes.right_hand_slot_y, constantes.slot_size, constantes.slot_size))
+        pygame.draw.rect(interfaz, constantes.slot_color,
+                         (constantes.right_hand_slot_x + 2, constantes.right_hand_slot_y + 2, constantes.slot_size - 4, constantes.slot_size - 4))
         if self.right_hand:
-            self._draw_item(interfaz, self.right_hand,
-                            constantes.right_hand_slot_x,
-                            constantes.right_hand_slot_y)
-            
-            
+            self._draw_item(interfaz, self.right_hand, constantes.right_hand_slot_x, constantes.right_hand_slot_y)
+
     def handle_click(self, pos, button, show_inventory=False):
         mouse_x, mouse_y = pos
-        #verificar slot de las manos
-        if constantes.hotbar_y <=mouse_y <= constantes.hotbar_y + constantes.slot_size:
-            #slot mano izquierda
-            if(constantes.left_hand_slot_x <= mouse_x <=
-                constantes.left_hand_slot_x + constantes.slot_size):
+
+        # slots de manos (misma Y que la hotbar)
+        if constantes.hotbar_y <= mouse_y <= constantes.hotbar_y + constantes.slot_size:
+            # izquierda
+            if (constantes.left_hand_slot_x <= mouse_x <= constantes.left_hand_slot_x + constantes.slot_size and
+                constantes.left_hand_slot_y <= mouse_y <= constantes.left_hand_slot_y + constantes.slot_size):
                 self._handle_hand_slot_click(button, 'left')
                 return True
-            #slot mano derecha
-            elif(constantes.right_hand_slot_x <= mouse_x <=
-                    constantes.right_hand_slot_x + constantes.slot_size):
+            # derecha
+            if (constantes.right_hand_slot_x <= mouse_x <= constantes.right_hand_slot_x + constantes.slot_size and
+                constantes.right_hand_slot_y <= mouse_y <= constantes.right_hand_slot_y + constantes.slot_size):
                 self._handle_hand_slot_click(button, 'right')
                 return True
+
         # hotbar
         if constantes.hotbar_y <= mouse_y <= constantes.hotbar_y + constantes.slot_size:
             slot_index = (mouse_x - constantes.hotbar_x) // constantes.slot_size
             if 0 <= slot_index < constantes.hotbar_slots:
                 self._handle_hotbar_click(button, self.hotbar, slot_index,
                                           constantes.hotbar_x + (slot_index * constantes.slot_size),
-                                            constantes.hotbar_y)
+                                          constantes.hotbar_y)
                 return True
 
         if show_inventory:
@@ -204,20 +181,20 @@ class Inventory:
                     self._handle_crafting_grid_click(button, row, col)
                     return True
 
-            # resultado crafteo
+            # resultado de crafteo
             if (constantes.crafting_result_slot_x <= mouse_x <= constantes.crafting_result_slot_x + constantes.slot_size and
                 constantes.crafting_result_slot_y <= mouse_y <= constantes.crafting_result_slot_y + constantes.slot_size):
                 self._handle_crafting_result_click(button)
                 return True
 
-        # click fuera de los slots
+        # click fuera de cualquier slot: soltar item en primer hueco
         if self.dragged_item and button == 1:
             self._return_dragged_item()
         return False
 
     def _handle_hotbar_click(self, button, hotbar, slot_index, slot_x, slot_y):
         mouse_x, mouse_y = pygame.mouse.get_pos()
-        if button == 1:  # click izquierdo
+        if button == 1:  # izquierdo
             if self.dragged_item:
                 if hotbar[slot_index] is None:
                     hotbar[slot_index] = self.dragged_item
@@ -248,27 +225,27 @@ class Inventory:
                 item_rect.x = slot_x
                 item_rect.y = slot_y
                 self.dragged_item.drag_offset = (mouse_x - item_rect.centerx, mouse_y - item_rect.centery)
+
     def _handle_hand_slot_click(self, button, hand):
         if button == 1:  # click izquierdo
             if hand == 'left':
                 if self.dragged_item:
                     if self.dragged_item.name == 'axe':
                         self.left_hand, self.dragged_item = self.dragged_item, self.left_hand
-            elif self.left_hand:
-                self.dragged_item = self.left_hand
-                self.left_hand = None
-        else:   # click derecho
-            if self.dragged_item:
-                if self.dragged_item.name == 'axe':
-                    self.right_hand, self.dragged_item = self.dragged_item, self.right_hand
-            elif self.right_hand:
-                self.dragged_item = self.right_hand
-                self.right_hand = None
+                elif self.left_hand:
+                    self.dragged_item = self.left_hand
+                    self.left_hand = None
+            else:  # right
+                if self.dragged_item:
+                    if self.dragged_item.name == 'axe':
+                        self.right_hand, self.dragged_item = self.dragged_item, self.right_hand
+                elif self.right_hand:
+                    self.dragged_item = self.right_hand
+                    self.right_hand = None
 
     def has_axe_equipped(self):
-        return( (self.left_hand and self.left_hand.name == 'axe') or 
-                    (self.right_hand and self.right_hand.name == 'axe')
-        )
+        return ((self.left_hand and self.left_hand.name == 'axe') or
+                (self.right_hand and self.right_hand.name == 'axe'))
 
     def _return_dragged_item(self):
         for i, slot in enumerate(self.hotbar):
@@ -283,55 +260,45 @@ class Inventory:
                     self.dragged_item = None
                     return
 
-    def _draw_crafting_grid(self, interfaz):  # revisar esta linea si es interfaz o windows
-        #dibujar cuadricula de crafteo 
+    def _draw_crafting_grid(self, interfaz):
+        # cuadricula crafting
         for row in range(constantes.crafting_grid_size):
             for col in range(constantes.crafting_grid_size):
                 x = constantes.crafting_grid_x + (col * constantes.slot_size)
                 y = constantes.crafting_grid_y + (row * constantes.slot_size)
-                #dibujar fondo del slot
-                # ARREGLO: pygame.draw.rect requiere un rectángulo como TUPLA (x, y, w, h)
-                pygame.draw.rect(interfaz, constantes.slot_border,
-                                 (x, y, constantes.slot_size, constantes.slot_size))
-                pygame.draw.rect(interfaz, constantes.slot_color,
-                                 (x + 2, y + 2, constantes.slot_size - 4, constantes.slot_size - 4))
-                #dibujar item si existe
+                # ARREGLO: pygame.draw.rect necesita una TUPLA (x, y, w, h) 
+                pygame.draw.rect(interfaz, constantes.slot_border, (x, y, constantes.slot_size, constantes.slot_size))
+                pygame.draw.rect(interfaz, constantes.slot_color,  (x + 2, y + 2, constantes.slot_size - 4, constantes.slot_size - 4))
                 if self.crafting_grid[row][col]:
                     self._draw_item(interfaz, self.crafting_grid[row][col], x, y)
 
-        #dibujar slot de resultado
+        # slot de resultado
         pygame.draw.rect(interfaz, constantes.slot_border,
                          (constantes.crafting_result_slot_x, constantes.crafting_result_slot_y, constantes.slot_size, constantes.slot_size))
         pygame.draw.rect(interfaz, constantes.slot_color,
                          (constantes.crafting_result_slot_x + 2, constantes.crafting_result_slot_y + 2, constantes.slot_size - 4, constantes.slot_size - 4))
-        #dibujar resultado si existe
         if self.crafting_result:
             self._draw_item(interfaz, self.crafting_result, constantes.crafting_result_slot_x, constantes.crafting_result_slot_y)
 
     def _handle_crafting_grid_click(self, button, row, col):
-        if button == 1:  # CLICK izquierdo
+        if button == 1:
             if self.dragged_item:
-                #soltar item en la cuadricula
                 if self.crafting_grid[row][col] is None:
                     self.crafting_grid[row][col] = self.dragged_item
                     self.dragged_item = None
                 else:
-                    #intercambiar items
                     self.crafting_grid[row][col], self.dragged_item = self.dragged_item, self.crafting_grid[row][col]
             elif self.crafting_grid[row][col]:
-                #comenzar a arrastrar 
                 self.dragged_item = self.crafting_grid[row][col]
                 self.crafting_grid[row][col] = None
-            #verificar receta despues de cada cambio
             self._check_recipe()
 
     def _handle_crafting_result_click(self, button):
-        if button == 1 and self.crafting_result:  # click izquierdo y hay resultado
+        if button == 1 and self.crafting_result:
             if not self.dragged_item:
-                #tomar resultado
                 self.dragged_item = self.crafting_result
                 self.crafting_result = None
-                #consumir items
+                # consumir 1 de cada slot usado
                 for row in range(constantes.crafting_grid_size):
                     for col in range(constantes.crafting_grid_size):
                         if self.crafting_grid[row][col]:
@@ -339,11 +306,9 @@ class Inventory:
                                 self.crafting_grid[row][col].quantity -= 1
                             else:
                                 self.crafting_grid[row][col] = None
-                # ARREGLO: re-evaluar la receta tras consumir insumos
-                self._check_recipe()
 
     def _check_recipe(self):
-        #obtener el patron actual
+        # patrón actual
         current_pattern = []
         for row in range(constantes.crafting_grid_size):
             pattern_row = []
@@ -352,14 +317,13 @@ class Inventory:
                 pattern_row.append(item.name if item else None)
             current_pattern.append(tuple(pattern_row))
 
-        #verificar si coincide alguna receta
-        # ARREGLO: asegurar que iteramos sobre self.recipes
+        # comparar con recetas
         for recipe_name, recipe in self.recipes.items():
             matches = True
             for row in range(constantes.crafting_grid_size):
                 for col in range(constantes.crafting_grid_size):
                     expected = recipe['pattern'][row][col]
-                    actual = current_pattern[row][col]
+                    actual   = current_pattern[row][col]
                     if expected != actual:
                         matches = False
                         break
@@ -367,9 +331,7 @@ class Inventory:
                     break
             if matches:
                 self.crafting_result = InventoryItem(recipe['result'],
-                                                     self.item_images[recipe['result']])
+                                                    self.item_images[recipe['result']])
                 return
-
-        #si no hay coincidencia, limpiar el resultado
+        # si no coincide, limpiar
         self.crafting_result = None
-
