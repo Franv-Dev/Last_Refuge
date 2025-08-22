@@ -62,7 +62,7 @@ def main():
         if keys[pygame.K_UP]:    dy -= 5
         if keys[pygame.K_DOWN]:  dy += 5
         player.is_running = keys[pygame.K_LSHIFT] and player.stamina > 0
-        player.Move(dx, dy, world)
+        player.move(dx, dy, world)
 
         camera_x = player.x - constantes.window_width // 2
         camera_y = player.y - constantes.window_height // 2

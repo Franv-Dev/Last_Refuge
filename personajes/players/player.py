@@ -143,22 +143,24 @@ class Player:
                 current_frame = self.axe_animations[4][self.chop_frame]
             elif self.current_state in [idle_up, walk_up]:
                 current_frame = self.axe_animations[5][self.chop_frame]
-            elif self.is_hoeing:
-                if self.current_state in [idle_right, walk_right]:
-                    current_frame = self.load_hoe_animations[6][self.hoe_frame]
-                    if self.facing_left:
-                        current_frame = pygame.transform.flip(current_frame, True, False)
-                elif self.current_state in [idle_down, walk_down]:
-                    current_frame = self.load_hoe_animations[7][self.hoe_frame]
-                elif self.current_state in [idle_up, walk_up]:
-                    current_frame = self.load_hoe_animations[8][self.hoe_frame]
+
+        elif self.is_hoeing:
+            if self.current_state in [idle_right, walk_right]:
+                current_frame = self.hoe_animations[6][self.hoe_frame]
+                if self.facing_left:
+                    current_frame = pygame.transform.flip(current_frame, True, False)
+            elif self.current_state in [idle_down, walk_down]:
+                current_frame = self.hoe_animations[7][self.hoe_frame]
+            elif self.current_state in [idle_up, walk_up]:
+                current_frame = self.hoe_animations[8][self.hoe_frame]
+
         else:
             current_frame = self.animations[self.current_state][self.animation_frame]
             if self.facing_left:
                 current_frame = pygame.transform.flip(current_frame, True, False)
 
-        # Centrado del frame de hacha
-        if self.is_chopping:
+        # Centrado de frames de acción (hacha o azada)
+        if self.is_chopping or self.is_hoeing:
             action_scale = constantes.action_frame_size / constantes.frame_size
             size_diff = int(constantes.player * (action_scale - 1))
             interfaz.blit(current_frame, (interfaz_x - size_diff // 2, interfaz_y - size_diff // 2))
@@ -167,8 +169,9 @@ class Player:
 
         self.draw_status_bars(interfaz)
 
+
     # ARREGLO: este método estaba FUERA de la clase. Lo metemos adentro y limpiamos duplicados.
-    def Move(self, dx, dy, world):
+    def move(self, dx, dy, world):
         self.moving = dx != 0 or dy != 0
         if self.moving:
             speed_multiplier = run_speed if self.is_running and self.stamina > 0 else walk_Speed
@@ -233,7 +236,7 @@ class Player:
         return dist2 <= (radius * radius)
 
     def interact(self, world):
-        keys = pygame.get_pessed()
+        keys = pygame.key.get_pressed()
         if keys[pygame.K_e] and self.inventory.has_hoe_equipped():
             self.is_hoeing = True
             self.hoe_timer = pygame.time.get_ticks()
