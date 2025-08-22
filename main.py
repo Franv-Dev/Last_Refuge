@@ -89,6 +89,7 @@ def main():
         player.inventory.draw(window, show_inventory)
 
         pygame.display.flip()
+        #este si funciona
 
 if __name__ == "__main__":
     main()
