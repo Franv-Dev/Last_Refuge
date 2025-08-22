@@ -27,6 +27,7 @@ class Inventory:
             "wood":  os.path.join("assets", "images", "objects", "wood.png"),
             "stone": os.path.join("assets", "images", "objects", "small_stone.png"),
             "axe":   os.path.join("assets", "images", "objects", "axe.png"),
+            "hoe":   os.path.join("assets", "images", "objects", "hoe.png")
         }
 
         # definir recetas
@@ -35,6 +36,10 @@ class Inventory:
             'axe': {
                 'pattern': [('wood', 'stone'), (None, None)],
                 'result':  'axe'
+            },
+            'hoe': {
+                'pattern': [('stone', 'wood'), (None, None)],
+                'result':  'hoe'
             }
         }
 
@@ -82,8 +87,8 @@ class Inventory:
         if self.dragged_item:
             mouse_pos = pygame.mouse.get_pos()
             interfaz.blit(self.dragged_item.image,
-                          (mouse_pos[0] - self.dragged_item.drag_offset[0],
-                           mouse_pos[1] - self.dragged_item.drag_offset[1]))
+                        (mouse_pos[0] - self.dragged_item.drag_offset[0],
+                        mouse_pos[1] - self.dragged_item.drag_offset[1]))
             if self.dragged_item.quantity > 1:
                 text = self.font.render(str(self.dragged_item.quantity), True, constantes.color_white)
                 text_rect = text.get_rect()
@@ -274,9 +279,9 @@ class Inventory:
 
         # slot de resultado
         pygame.draw.rect(interfaz, constantes.slot_border,
-                         (constantes.crafting_result_slot_x, constantes.crafting_result_slot_y, constantes.slot_size, constantes.slot_size))
+                        (constantes.crafting_result_slot_x, constantes.crafting_result_slot_y, constantes.slot_size, constantes.slot_size))
         pygame.draw.rect(interfaz, constantes.slot_color,
-                         (constantes.crafting_result_slot_x + 2, constantes.crafting_result_slot_y + 2, constantes.slot_size - 4, constantes.slot_size - 4))
+                        (constantes.crafting_result_slot_x + 2, constantes.crafting_result_slot_y + 2, constantes.slot_size - 4, constantes.slot_size - 4))
         if self.crafting_result:
             self._draw_item(interfaz, self.crafting_result, constantes.crafting_result_slot_x, constantes.crafting_result_slot_y)
 
