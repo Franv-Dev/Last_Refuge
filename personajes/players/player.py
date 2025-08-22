@@ -31,14 +31,18 @@ class Player:
         self.facing_left = False
         self.is_running = False
 
-        # Hacha
+        # Hacha y azada
         self.is_chopping = False
         self.chop_timer = 0
         self.chop_frame = 0
+        self.is_hoeing = False
+        self.hoe_timer = 0
+        self.hoe_frame = 0
 
         # Animaciones
         self.animations = self.load_animations()
         self.axe_animations = self.load_axe_animations()
+        self.hoe_animations = self.load_hoe_animations()
 
         # Barras de estado
         self.energy  = max_energy
@@ -84,6 +88,29 @@ class Player:
             animation[state] = frames
         return animation
 
+    def load_hoe_animations(self):
+        animation = {}
+        # filas 3,4,5 (derecha/abajo/arriba) como en el video
+        row_mapping = {6: 6, 7: 7, 8: 8}
+        for state, row in row_mapping.items():
+            frames = []
+            for frame in range(hoe_frames):
+                temp_surface = pygame.Surface((constantes.action_frame_size, constantes.action_frame_size), pygame.SRCALPHA)
+                x = (frame % hoe_cols) * constantes.action_frame_size
+                frame_rect = pygame.Rect(x, row * constantes.action_frame_size,
+                                         constantes.action_frame_size, constantes.action_frame_size)
+                # copiar región
+                temp_surface.blit(self.action_sprite_sheet, (0, 0), frame_rect)
+                # escalar al tamaño del jugador
+                action_scale = constantes.action_frame_size / constantes.frame_size
+                action_size = int(constantes.frame_size * action_scale)
+                surface = pygame.Surface((action_size, action_size), pygame.SRCALPHA)
+                scaled_temp = pygame.transform.scale(temp_surface, (action_size, action_size))
+                surface.blit(scaled_temp, (0, 0))
+                frames.append(surface)
+            animation[state] = frames
+        return animation
+    
     def update_animation(self):
         current_time = pygame.time.get_ticks()
         if self.is_chopping and current_time - self.chop_timer > constantes.axe_animation_delay:
@@ -91,6 +118,12 @@ class Player:
             self.chop_frame = (self.chop_frame + 1) % constantes.axe_frames
             if self.chop_frame == 0:  # completada
                 self.is_chopping = False
+        elif self.is_hoeing:
+            if current_time - self.hoe_timer > constantes.hoe_animation_delay:
+                self.hoe_timer = current_time
+                self.hoe_frame = (self.hoe_frame + 1) % constantes.hoe_frames
+                if self.hoe_frame == 0:
+                    self.is_hoeing = False
         else:
             animation_speed = running_animation_delay if self.is_running else animation_delay
             if current_time - self.animation_timer > animation_speed:
@@ -110,6 +143,15 @@ class Player:
                 current_frame = self.axe_animations[4][self.chop_frame]
             elif self.current_state in [idle_up, walk_up]:
                 current_frame = self.axe_animations[5][self.chop_frame]
+            elif self.is_hoeing:
+                if self.current_state in [idle_right, walk_right]:
+                    current_frame = self.load_hoe_animations[6][self.hoe_frame]
+                    if self.facing_left:
+                        current_frame = pygame.transform.flip(current_frame, True, False)
+                elif self.current_state in [idle_down, walk_down]:
+                    current_frame = self.load_hoe_animations[7][self.hoe_frame]
+                elif self.current_state in [idle_up, walk_up]:
+                    current_frame = self.load_hoe_animations[8][self.hoe_frame]
         else:
             current_frame = self.animations[self.current_state][self.animation_frame]
             if self.facing_left:
@@ -190,9 +232,12 @@ class Player:
         radius = (self.size // 2) + (obj.size // 2) + 8  # margen pequeño extra
         return dist2 <= (radius * radius)
 
-    # ARREGLO: este método también estaba fuera de la clase.
     def interact(self, world):
-        # Árboles: talar (con hacha más rápido; sin hacha más lento)
+        keys = pygame.get_pessed()
+        if keys[pygame.K_e] and self.inventory.has_hoe_equipped():
+            self.is_hoeing = True
+            self.hoe_timer = pygame.time.get_ticks()
+            self.hoe_frame = 0
         for tree in world.trees:
             if self.is_near(tree):
                 has_axe = self.inventory.has_axe_equipped()
@@ -202,7 +247,7 @@ class Player:
                     self.chop_frame = 0
                 if tree.chop(with_axe=has_axe):
                     self.inventory.add_item('wood')
-                return  # ya interactuamos con un árbol cercano
+                return
 
         # Piedras pequeñas: recoger
         for stone in world.small_stone:  # propiedad que devuelve la lista "plana"

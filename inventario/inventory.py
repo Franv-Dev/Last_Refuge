@@ -235,14 +235,14 @@ class Inventory:
         if button == 1:  # click izquierdo
             if hand == 'left':
                 if self.dragged_item:
-                    if self.dragged_item.name == 'axe':
+                    if self.dragged_item.name in ["axe", "hoe"]:
                         self.left_hand, self.dragged_item = self.dragged_item, self.left_hand
                 elif self.left_hand:
                     self.dragged_item = self.left_hand
                     self.left_hand = None
             else:  # right
                 if self.dragged_item:
-                    if self.dragged_item.name == 'axe':
+                    if self.dragged_item.name in ["axe", "hoe"]:
                         self.right_hand, self.dragged_item = self.dragged_item, self.right_hand
                 elif self.right_hand:
                     self.dragged_item = self.right_hand
@@ -251,6 +251,10 @@ class Inventory:
     def has_axe_equipped(self):
         return ((self.left_hand and self.left_hand.name == 'axe') or
                 (self.right_hand and self.right_hand.name == 'axe'))
+    
+    def has_hoe_equipped(self):
+        return ((self.left_hand and self.left_hand.name == 'hoe') or
+                (self.right_hand and self.right_hand.name == 'hoe'))
 
     def _return_dragged_item(self):
         for i, slot in enumerate(self.hotbar):

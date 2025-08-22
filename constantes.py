@@ -109,10 +109,16 @@ left_hand_slot_y  = hotbar_y
 right_hand_slot_x = hotbar_x + (slot_size * hotbar_slots) + margin
 right_hand_slot_y = hotbar_y
 
-# Animación del hacha
-axe_cols = 2                  # ARREGLO: añadidos para animación hacha 
+# Animación tools
+# Hacha
+axe_cols = 2
 axe_frames = 2
 axe_animation_delay = 200
+
+# Azada
+hoe_cols = 2
+hoe_frames = 2
+hoe_animation_delay = 200
 
 # Colores inventario
 slot_color  = (139, 139, 139)
