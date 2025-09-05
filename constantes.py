@@ -5,7 +5,7 @@ windows_width_player, height_player = 50, 50
 window_width, window_height = 1280, 720
 
 # Tamaño objetos del mapa
-player = 100
+player = 48
 grass = 64      # césped
 tree = 70       # árboles
 small_stone = 20  # piedras pequeñas
